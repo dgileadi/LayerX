@@ -20,7 +20,8 @@ class ViewController: NSViewController {
 		didSet { updateTextFieldVisibility() }
 	}
 
-	private var currentTab = 1 // Falls in range 1...9
+	var currentTab = 1 // Falls in range 1...9
+
 	private var tabImages = [Int: NSImage]()
 
 	override var acceptsFirstResponder: Bool {
@@ -67,9 +68,13 @@ class ViewController: NSViewController {
 			if event.modifierFlags.contains(.command), event.characters?.count == 1 {
 				if event.characters?.lowercased() == "w" {
 					self?.updateCurrentImage(nil)
+                    if let currentTab = self?.currentTab {
+                        appDelegate().updateMenusForTab(currentTab, exists: false)
+                    }
 					return nil
 				} else if let digit = event.characters.flatMap(Int.init), digit != 0 {
 					self?.selectTab(digit)
+                    appDelegate().updateMenusForTab(digit, exists: self?.tabImages[digit] != nil)
 					return nil
 				}
 			}
@@ -85,6 +90,10 @@ class ViewController: NSViewController {
 		let pixelSize = image.representations.first.map { NSSize(width: $0.pixelsWide, height: $0.pixelsHigh) }
 		return pixelSize ?? image.size
 	}
+
+    func tabHasImage(_ tab: Int) -> Bool {
+        return tabImages[tab] != nil
+    }
 
 	func selectTab(_ tab: Int) {
 		currentTab = tab
@@ -170,6 +179,7 @@ class ViewController: NSViewController {
 extension ViewController: MCDragAndDropImageViewDelegate {
 	func dragAndDropImageViewDidDrop(_ imageView: MCDragAndDropImageView) {
 		updateCurrentImage(imageView.image)
+        appDelegate().updateMenusForTab(currentTab, exists: true)
 	}
 }
 
